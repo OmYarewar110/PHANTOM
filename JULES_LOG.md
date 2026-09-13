@@ -30,3 +30,16 @@
 - `server/tools/internet.js`
 **Tests:** 73 passed
 **Commits:** Will be included on push.
+
+## 2025-08-06 — Session 4
+**What I decided to work on:** I noticed from memory instructions that when truncating OpenAI conversation histories to manage context limits, the resulting array must not start with orphaned tool responses and all assistant tool calls must have matching responses. Blind slicing without cleanup causes HTTP 400 errors from the API. The existing logic used `recentHistory[x].tool_call_id` which might be inaccurate or problematic compared to explicitly checking `role === 'tool'`. Additionally, there was a directive to silence/fix empty `catch (e) {}` blocks to prevent silent, hard-to-debug failures, which were found in `frontend/js/app.js` and `frontend/js/chat.js`.
+**What I built/fixed:**
+- Modified `server/ai/llm-client.js` to strictly use `role === 'tool'` when cleaning up orphaned tool responses.
+- Updated `frontend/js/app.js` to log a console error for failed pings rather than silently failing.
+- Updated `frontend/js/chat.js` to display a toast error to the user if tool argument parsing fails, rather than a silent/empty catch.
+**Files changed:**
+- `server/ai/llm-client.js`
+- `frontend/js/app.js`
+- `frontend/js/chat.js`
+**Tests:** 73 passed
+**Commits:** Will be included on push.
