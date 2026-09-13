@@ -486,8 +486,13 @@ window.Chat = {
         if (msg.tool_calls) {
           for (const tc of msg.tool_calls) {
             let args = {};
-            try { args = typeof tc.function.arguments === 'string' ? JSON.parse(tc.function.arguments) : tc.function.arguments; } catch (err) {
+            try {
+              args = typeof tc.function.arguments === 'string' ? JSON.parse(tc.function.arguments) : tc.function.arguments;
+            } catch (err) {
               console.error('Failed to parse tool arguments:', err);
+              if (window.Toast) {
+                window.Toast.show(err.message, 'error');
+              }
             }
 
             if (tc.function.name === 'write_file' || tc.function.name === 'edit_source_code') {

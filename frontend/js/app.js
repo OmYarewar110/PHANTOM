@@ -149,7 +149,9 @@
       if (ws && ws.readyState === WebSocket.OPEN) {
         try {
           ws.send(JSON.stringify({ type: 'ping' }));
-        } catch (e) {}
+        } catch (e) {
+          console.error('Error sending ping:', e);
+        }
       }
     }, 15000);
   }

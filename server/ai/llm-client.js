@@ -94,7 +94,7 @@ export async function processMessage(conversationId, userMessage, sessionContext
 
   // Clean up truncated history: ensure we don't start with orphan tool responses
   // and ensure all assistant tool_calls have matching tool responses
-  while (recentHistory.length > 0 && (recentHistory[0].role === 'tool' || recentHistory[0].tool_call_id)) {
+  while (recentHistory.length > 0 && recentHistory[0].role === 'tool') {
     recentHistory.shift();
   }
 
@@ -104,7 +104,7 @@ export async function processMessage(conversationId, userMessage, sessionContext
       const expectedToolCalls = msg.tool_calls;
       const actualToolResponses = [];
       let j = i + 1;
-      while (j < recentHistory.length && (recentHistory[j].role === 'tool' || recentHistory[j].tool_call_id)) {
+      while (j < recentHistory.length && recentHistory[j].role === 'tool') {
         actualToolResponses.push(recentHistory[j]);
         j++;
       }
