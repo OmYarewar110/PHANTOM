@@ -350,7 +350,7 @@ window.Chat = {
 
     card.innerHTML = `
       <div class="tool-card-header" onclick="this.nextElementSibling.classList.toggle('expanded')">
-        <span>⚡ ${data.name}</span>
+        <span>⚡ ${this.escapeHtml(data.name)}</span>
         <span style="flex:1;margin-left:8px;opacity:0.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${this.escapeHtml(argsPreview)}</span>
         <span class="tool-status running"><span class="spinner"></span></span>
       </div>
@@ -516,7 +516,7 @@ window.Chat = {
             if (tc.id) card.id = `tool-${tc.id}`;
             card.innerHTML = `
               <div class="tool-card-header" onclick="this.nextElementSibling.classList.toggle('expanded')">
-                <span>⚡ ${tc.function.name}</span>
+                <span>⚡ ${this.escapeHtml(tc.function.name)}</span>
                 <span style="flex:1;margin-left:8px;opacity:0.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${this.escapeHtml(argsPreview)}</span>
                 <span class="tool-status done">✓</span>
               </div>

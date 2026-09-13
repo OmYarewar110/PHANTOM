@@ -56,6 +56,11 @@
 
   // ─── Initialize ───
   initTheme();
+
+  if (localStorage.getItem('phantom_sidebar_collapsed') === 'true' && window.innerWidth > 768) {
+    document.getElementById('app').classList.add('sidebar-collapsed');
+  }
+
   Chat.init();
   Settings.init();
   Management.init();
@@ -710,7 +715,24 @@
     if (window.innerWidth <= 768) {
       sidebar.classList.toggle('open');
     } else {
-      document.getElementById('app').classList.toggle('sidebar-collapsed');
+      const appEl = document.getElementById('app');
+      appEl.classList.toggle('sidebar-collapsed');
+      const isCollapsed = appEl.classList.contains('sidebar-collapsed');
+      localStorage.setItem('phantom_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      if (window.innerWidth <= 768) {
+        sidebar.classList.toggle('open');
+      } else {
+        const appEl = document.getElementById('app');
+        appEl.classList.toggle('sidebar-collapsed');
+        const isCollapsed = appEl.classList.contains('sidebar-collapsed');
+        localStorage.setItem('phantom_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+      }
     }
   });
 

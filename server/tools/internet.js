@@ -1142,14 +1142,14 @@ async function fetchInstagramEmbed(shortcode) {
 
       let author = '';
       const authorMatch = html.match(/class="UsernameText"[^>]*>([\s\S]*?)<\/a>/i) ||
-                          html.match(/href="https:\/\/www\.instagram\.com\/([^\/"]+)\/"/i);
+                          html.match(/href="https:\/\/www\.instagram\.com\/([^/"]+)\/"/i);
       if (authorMatch) {
         author = authorMatch[1].replace(/<[^>]+>/g, '').trim();
       }
 
       let likes = '';
       const likesMatch = html.match(/<div class="SocialProof"[^>]*>([\s\S]*?)<\/div>/i) ||
-                         html.match(/([0-9,kM\.]+\s+likes?)/i);
+                         html.match(/([0-9,kM.]+\s+likes?)/i);
       if (likesMatch) {
         likes = likesMatch[1].replace(/<[^>]+>/g, '').trim();
       }
