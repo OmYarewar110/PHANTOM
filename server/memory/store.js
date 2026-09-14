@@ -131,9 +131,17 @@ export function initDB(dbPath = config.db.path) {
   `);
 
   // Auto-migrate schema for agentmemory upgrade
-  try { db.exec(`ALTER TABLE memories ADD COLUMN importance INTEGER DEFAULT 3;`); } catch {}
-  try { db.exec(`ALTER TABLE memories ADD COLUMN access_count INTEGER DEFAULT 1;`); } catch {}
-  try { db.exec(`ALTER TABLE memories ADD COLUMN last_accessed_at DATETIME DEFAULT CURRENT_TIMESTAMP;`); } catch {}
+  const columnsInfo = db.prepare('PRAGMA table_info(memories)').all();
+  const columns = columnsInfo.map(c => c.name);
+  if (!columns.includes('importance')) {
+    db.exec(`ALTER TABLE memories ADD COLUMN importance INTEGER DEFAULT 3;`);
+  }
+  if (!columns.includes('access_count')) {
+    db.exec(`ALTER TABLE memories ADD COLUMN access_count INTEGER DEFAULT 1;`);
+  }
+  if (!columns.includes('last_accessed_at')) {
+    db.exec(`ALTER TABLE memories ADD COLUMN last_accessed_at DATETIME DEFAULT CURRENT_TIMESTAMP;`);
+  }
 
   // Backfill if search_index is empty
   const count = getDB().prepare('SELECT count(*) as count FROM search_index').get();

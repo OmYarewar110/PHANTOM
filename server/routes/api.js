@@ -378,6 +378,10 @@ router.post('/sudo/validate', async (req, res) => {
     return res.json({ valid: false, message: 'No password provided' });
   }
 
+  if (typeof password !== 'string') {
+    return res.json({ valid: false, message: 'Invalid password format' });
+  }
+
   try {
     // Test sudo password by running a harmless command without blocking event loop
     const escapedPass = password.replace(/'/g, "'\\''");
@@ -393,7 +397,8 @@ router.post('/sudo/validate', async (req, res) => {
       res.json({ valid: false, message: 'Incorrect sudo password' });
     }
   } catch (err) {
-    res.json({ valid: false, message: `Validation error: ${err.message}` });
+    console.error('[Sudo Validate Error]', err);
+    res.json({ valid: false, message: 'Validation error occurred' });
   }
 });
 
