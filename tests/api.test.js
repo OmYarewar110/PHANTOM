@@ -245,4 +245,20 @@ describe('API Routes Error Handling', () => {
     // Re-initialize for subsequent tests
     initDB(':memory:');
   });
+
+  describe('Sudo Validation Endpoint (/api/sudo/validate)', () => {
+    it('should return 400 or invalid status if password is not a string (Object Injection)', async () => {
+      // Simulate windows behavior bypass for the test if it's on Windows
+      if (process.platform === 'win32') return;
+
+      const res = await request(app)
+        .post('/api/sudo/validate')
+        .send({ password: { length: 50, replace: 'malicious' } }) // object instead of string
+        .expect('Content-Type', /json/)
+        .expect(200);
+
+      expect(res.body.valid).toBe(false);
+      expect(res.body.message).toBe('Invalid password format');
+    });
+  });
 });

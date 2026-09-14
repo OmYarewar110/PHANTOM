@@ -30,3 +30,14 @@
 - `server/tools/internet.js`
 **Tests:** 73 passed
 **Commits:** Will be included on push.
+
+## 2025-08-06 — Session 4
+**What I decided to work on:** I decided to fix SQLite schema migration anti-patterns in `server/memory/store.js` that used empty catch blocks and to harden the `/api/sudo/validate` endpoint in `server/routes/api.js` to prevent object injection by explicitly verifying that the `password` input is a string, as well as hiding the raw error message from the client to prevent sensitive data leaks.
+**What I built/fixed:**
+- Modified `server/memory/store.js` to use `db.prepare('PRAGMA table_info(memories)').all()` to check for the existence of `importance`, `access_count`, and `last_accessed_at` before running `ALTER TABLE`.
+- Hardened the `/api/sudo/validate` endpoint in `server/routes/api.js` to strictly verify `typeof password === 'string'` before replacing characters and removed `err.message` from the HTTP response for error handling.
+**Files changed:**
+- `server/memory/store.js`
+- `server/routes/api.js`
+**Tests:** 73 passed
+**Commits:** Will be included on push.
