@@ -30,3 +30,14 @@
 - `server/tools/internet.js`
 **Tests:** 73 passed
 **Commits:** Will be included on push.
+
+## 2025-08-06 — Session 4
+**What I decided to work on:** I decided to perform Security Hardening and Bug Hunt based on memory context suggesting potential object injection and lacking input validation. I noticed that `/api/conversations` (POST, PUT) was missing bounds checking for `title`, which could lead to excessively large titles, and `/api/sudo/validate` could crash on object injection or leak plain-text passwords in error messages.
+**What I built/fixed:**
+- Added strict `typeof === 'string'` and length limits for the `title` field in the `/api/conversations` endpoints to prevent malformed data.
+- Added strict type checking for the `password` field in `/api/sudo/validate` and caught generic errors to prevent potential plain-text command leakage in the HTTP response.
+**Files changed:**
+- `server/routes/api.js`
+- `tests/api.test.js`
+**Tests:** 76 passed / 3 added
+**Commits:** Will be included on push.

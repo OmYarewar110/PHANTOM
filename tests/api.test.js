@@ -133,6 +133,39 @@ describe('API Routes', () => {
     expect(res.body.title).toBe('Test Conv');
   });
 
+  it('POST /api/conversations should validate title length and type', async () => {
+    const uniqueTestIp = `192.168.${Math.floor(globalIpCounter / 256)}.${globalIpCounter % 256}`;
+    globalIpCounter++;
+
+    let res = await request(app).post('/api/conversations').set('X-Forwarded-For', uniqueTestIp).send({ title: '' });
+    expect(res.status).toBe(400);
+
+    res = await request(app).post('/api/conversations').set('X-Forwarded-For', uniqueTestIp).send({ title: 123 });
+    expect(res.status).toBe(400);
+
+    res = await request(app).post('/api/conversations').set('X-Forwarded-For', uniqueTestIp).send({ title: 'A'.repeat(201) });
+    expect(res.status).toBe(400);
+  });
+
+  it('PUT /api/conversations/:id/title should validate title length and type', async () => {
+    const uniqueTestIp = `192.168.${Math.floor(globalIpCounter / 256)}.${globalIpCounter % 256}`;
+    globalIpCounter++;
+    const createRes = await request(app).post('/api/conversations').set('X-Forwarded-For', uniqueTestIp).send({ title: 'Valid Title' });
+    const convId = createRes.body.id;
+
+    let res = await request(app).put(`/api/conversations/${convId}/title`).set('X-Forwarded-For', uniqueTestIp).send({ title: '' });
+    expect(res.status).toBe(400);
+
+    res = await request(app).put(`/api/conversations/${convId}/title`).set('X-Forwarded-For', uniqueTestIp).send({ title: 123 });
+    expect(res.status).toBe(400);
+
+    res = await request(app).put(`/api/conversations/${convId}/title`).set('X-Forwarded-For', uniqueTestIp).send({ title: 'A'.repeat(201) });
+    expect(res.status).toBe(400);
+
+    res = await request(app).put(`/api/conversations/${convId}/title`).set('X-Forwarded-For', uniqueTestIp).send({ title: 'New Valid Title' });
+    expect(res.status).toBe(200);
+  });
+
   it('GET /api/conversations/:id/export should export conversation to markdown', async () => {
     const octet3 = Math.floor(globalIpCounter / 256);
     const octet4 = globalIpCounter % 256;
@@ -182,6 +215,14 @@ describe('API Routes', () => {
     expect(res.text).toContain('HTML Export Test');
     expect(res.text).toContain('HTML Hello');
     expect(res.text).toContain('HTML World');
+  });
+
+  it('POST /api/sudo/validate should reject object injection and not leak password in error', async () => {
+    const res = await request(app).post('/api/sudo/validate').set('X-Forwarded-For', testIp).send({ password: { $ne: 'string' } });
+    expect(res.status).toBe(200);
+    expect(res.body.valid).toBe(false);
+    expect(res.body.message).not.toContain('$ne');
+    expect(res.body.message).toBe('Invalid password format');
   });
 
   it('GET /api/system/info should return 200', async () => {
