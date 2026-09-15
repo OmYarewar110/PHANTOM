@@ -195,7 +195,16 @@ router.get('/conversations', (req, res) => {
 
 router.post('/conversations', (req, res) => {
   try {
-    const conv = createConversation(req.body.title || 'New Conversation');
+    let title = req.body.title;
+    if (title !== undefined) {
+      if (typeof title !== 'string' || title.trim() === '') {
+        return res.status(400).json({ error: 'Title must be a non-empty string' });
+      }
+      if (title.length > 200) {
+        return res.status(400).json({ error: 'Title cannot exceed 200 characters' });
+      }
+    }
+    const conv = createConversation(title || 'New Conversation');
     res.json(conv);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -224,7 +233,14 @@ router.delete('/conversations/:id', (req, res) => {
 
 router.put('/conversations/:id/title', (req, res) => {
   try {
-    updateConversationTitle(req.params.id, req.body.title);
+    const title = req.body.title;
+    if (typeof title !== 'string' || title.trim() === '') {
+      return res.status(400).json({ error: 'Title must be a non-empty string' });
+    }
+    if (title.length > 200) {
+      return res.status(400).json({ error: 'Title cannot exceed 200 characters' });
+    }
+    updateConversationTitle(req.params.id, title);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -377,6 +393,9 @@ router.post('/sudo/validate', async (req, res) => {
   if (!password) {
     return res.json({ valid: false, message: 'No password provided' });
   }
+  if (typeof password !== 'string') {
+    return res.json({ valid: false, message: 'Invalid password format' });
+  }
 
   try {
     // Test sudo password by running a harmless command without blocking event loop
@@ -393,7 +412,8 @@ router.post('/sudo/validate', async (req, res) => {
       res.json({ valid: false, message: 'Incorrect sudo password' });
     }
   } catch (err) {
-    res.json({ valid: false, message: `Validation error: ${err.message}` });
+    console.error('[API] Sudo validation error'); // Don't log err.message which may contain password
+    res.json({ valid: false, message: 'Validation error occurred' }); // Don't leak plain-text err.message
   }
 });
 
