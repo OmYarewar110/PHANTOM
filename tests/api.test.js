@@ -184,6 +184,26 @@ describe('API Routes', () => {
     expect(res.text).toContain('HTML World');
   });
 
+  it('DELETE /api/conversations/:id should delete a conversation', async () => {
+    const octet3 = Math.floor(globalIpCounter / 256);
+    const octet4 = globalIpCounter % 256;
+    const uniqueTestIp = `192.168.${octet3}.${octet4}`;
+    globalIpCounter++;
+
+    // Create conversation
+    const convRes = await request(app).post('/api/conversations').set('X-Forwarded-For', uniqueTestIp).send({ title: 'Delete Test' });
+    const convId = convRes.body.id;
+
+    // Delete conversation
+    const delRes = await request(app).delete(`/api/conversations/${convId}`).set('X-Forwarded-For', uniqueTestIp);
+    expect(delRes.status).toBe(200);
+    expect(delRes.body.success).toBe(true);
+
+    // Verify conversation is deleted
+    const getRes = await request(app).get(`/api/conversations/${convId}`).set('X-Forwarded-For', uniqueTestIp);
+    expect(getRes.status).toBe(404);
+  });
+
   it('GET /api/system/info should return 200', async () => {
     const res = await request(app).get('/api/system/info').set('X-Forwarded-For', testIp);
     expect(res.status).toBe(200);

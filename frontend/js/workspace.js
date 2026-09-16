@@ -202,10 +202,10 @@ window.WorkspaceExplorer = {
         treeEl.innerHTML = this.renderNodes(this.treeData);
         this.attachTreeListeners();
       } else {
-        treeEl.innerHTML = `<div class="workspace-error">❌ ${data.error}</div>`;
+        treeEl.innerHTML = `<div class="workspace-error">❌ ${this.escapeHtml(data.error)}</div>`;
       }
     } catch (err) {
-      treeEl.innerHTML = `<div class="workspace-error">❌ Error: ${err.message}</div>`;
+      treeEl.innerHTML = `<div class="workspace-error">❌ Error: ${this.escapeHtml(err.message)}</div>`;
     }
   },
 
