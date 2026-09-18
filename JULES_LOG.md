@@ -30,3 +30,12 @@
 - `server/tools/internet.js`
 **Tests:** 73 passed
 **Commits:** Will be included on push.
+
+## 2025-08-06 — Session 4
+**What I decided to work on:** I decided to fix the SQLite schema migration logic in `server/memory/store.js` as it relied on intentional query failures and silent catch blocks for `ALTER TABLE` statements which is poor practice. The new code uses `PRAGMA table_info` to check if columns exist before executing the statements.
+**What I built/fixed:**
+- Replaced the `try { db.exec(...) } catch {}` pattern with `PRAGMA table_info` check in `server/memory/store.js`.
+**Files changed:**
+- `server/memory/store.js`
+**Tests:** 73 passed
+**Commits:** Will be included on push.
