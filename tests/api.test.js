@@ -133,6 +133,21 @@ describe('API Routes', () => {
     expect(res.body.title).toBe('Test Conv');
   });
 
+  it('POST /api/conversations should return 400 for invalid title', async () => {
+    let res = await request(app).post('/api/conversations').set('X-Forwarded-For', testIp).send({ title: '' });
+    expect(res.status).toBe(400);
+    res = await request(app).post('/api/conversations').set('X-Forwarded-For', testIp).send({ title: 'a'.repeat(201) });
+    expect(res.status).toBe(400);
+  });
+
+  it('PUT /api/conversations/:id/title should return 400 for invalid title', async () => {
+    const convRes = await request(app).post('/api/conversations').set('X-Forwarded-For', testIp).send({ title: 'Valid Title' });
+    let res = await request(app).put(`/api/conversations/${convRes.body.id}/title`).set('X-Forwarded-For', testIp).send({ title: '' });
+    expect(res.status).toBe(400);
+    res = await request(app).put(`/api/conversations/${convRes.body.id}/title`).set('X-Forwarded-For', testIp).send({ title: 'a'.repeat(201) });
+    expect(res.status).toBe(400);
+  });
+
   it('GET /api/conversations/:id/export should export conversation to markdown', async () => {
     const octet3 = Math.floor(globalIpCounter / 256);
     const octet4 = globalIpCounter % 256;
