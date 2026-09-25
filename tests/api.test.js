@@ -246,3 +246,30 @@ describe('API Routes Error Handling', () => {
     initDB(':memory:');
   });
 });
+
+describe('Conversation Validation', () => {
+  let testIp;
+  beforeEach(() => {
+    testIp = '192.168.1.100';
+    initDB(':memory:');
+  });
+  afterEach(() => {
+    closeDB();
+  });
+  it('POST /api/conversations should reject empty title', async () => {
+    const res = await request(app).post('/api/conversations').set('X-Forwarded-For', testIp).send({ title: '' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('Title must be a non-empty string');
+  });
+  it('POST /api/conversations should reject oversized title', async () => {
+    const res = await request(app).post('/api/conversations').set('X-Forwarded-For', testIp).send({ title: 'a'.repeat(201) });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('Title must be a non-empty string');
+  });
+  it('PUT /api/conversations/:id/title should reject empty title', async () => {
+    const convRes = await request(app).post('/api/conversations').set('X-Forwarded-For', testIp).send({ title: 'Valid' });
+    const res = await request(app).put(`/api/conversations/${convRes.body.id}/title`).set('X-Forwarded-For', testIp).send({ title: '' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('Title must be a non-empty string');
+  });
+});

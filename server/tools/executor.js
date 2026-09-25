@@ -544,7 +544,11 @@ function detectPackageManager() {
  */
 async function webRequest({ url, method = 'GET', headers = {}, body, follow_redirects = true }) {
   try {
-    validateUrlForSSRF(url);
+    try {
+      validateUrlForSSRF(url);
+    } catch (err) {
+      return `Request error: ${err.message}`;
+    }
     const opts = {
       method,
       headers: { 'User-Agent': getRandomUA(), ...headers },
@@ -799,7 +803,11 @@ async function searchWeb({ query }) {
  */
 async function scrapeWebpage({ url, max_length = 30000 }) {
   try {
-    validateUrlForSSRF(url);
+    try {
+      validateUrlForSSRF(url);
+    } catch (err) {
+      return `Request error: ${err.message}`;
+    }
     const response = await fetch(url, {
       headers: {
         'User-Agent': getRandomUA(),
