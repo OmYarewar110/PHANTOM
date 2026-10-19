@@ -145,7 +145,11 @@ router.get('/conversations', (req, res) => {
 
 router.post('/conversations', (req, res) => {
   try {
-    const conv = createConversation(req.body.title || 'New Conversation');
+    const title = req.body.title || 'New Conversation';
+    if (typeof title !== 'string' || title.trim() === '' || title.length > 200) {
+      return res.status(400).json({ error: 'Title must be a non-empty string up to 200 characters' });
+    }
+    const conv = createConversation(title);
     res.json(conv);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -174,7 +178,11 @@ router.delete('/conversations/:id', (req, res) => {
 
 router.put('/conversations/:id/title', (req, res) => {
   try {
-    updateConversationTitle(req.params.id, req.body.title);
+    const { title } = req.body;
+    if (typeof title !== 'string' || title.trim() === '' || title.length > 200) {
+      return res.status(400).json({ error: 'Title must be a non-empty string up to 200 characters' });
+    }
+    updateConversationTitle(req.params.id, title);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -324,7 +332,7 @@ router.post('/sudo/validate', async (req, res) => {
   }
 
   const { password } = req.body;
-  if (!password) {
+  if (!password || typeof password !== 'string') {
     return res.json({ valid: false, message: 'No password provided' });
   }
 
@@ -343,7 +351,8 @@ router.post('/sudo/validate', async (req, res) => {
       res.json({ valid: false, message: 'Incorrect sudo password' });
     }
   } catch (err) {
-    res.json({ valid: false, message: `Validation error: ${err.message}` });
+    console.error('[Sudo Validate] Validation error occurred');
+    res.json({ valid: false, message: 'Validation error occurred' });
   }
 });
 

@@ -89,9 +89,9 @@ window.copyCode = function(id) {
     const btn = el.previousElementSibling?.querySelector('.copy-btn') ||
                 el.parentElement?.querySelector('.copy-btn');
     if (btn) {
-      const orig = btn.textContent;
-      btn.textContent = 'Copied!';
-      setTimeout(() => { btn.textContent = orig; }, 1500);
+      const orig = btn.innerHTML;
+      btn.innerHTML = 'Copied!';
+      setTimeout(() => { btn.innerHTML = orig; }, 1500);
     }
   });
 };

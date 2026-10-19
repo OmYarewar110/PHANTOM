@@ -133,6 +133,18 @@ describe('API Routes', () => {
     expect(res.body.title).toBe('Test Conv');
   });
 
+  it('POST /api/conversations should reject invalid titles', async () => {
+    const octet3 = Math.floor(globalIpCounter / 256);
+    const octet4 = globalIpCounter % 256;
+    const uniqueTestIp = `192.168.${octet3}.${octet4}`;
+    globalIpCounter++;
+
+    const res = await request(app).post('/api/conversations').set('X-Forwarded-For', uniqueTestIp).send({ title: { invalid: true } });
+    expect(res.status).toBe(400);
+    const res2 = await request(app).post('/api/conversations').set('X-Forwarded-For', uniqueTestIp).send({ title: 'a'.repeat(201) });
+    expect(res2.status).toBe(400);
+  });
+
   it('GET /api/conversations/:id/export should export conversation to markdown', async () => {
     const octet3 = Math.floor(globalIpCounter / 256);
     const octet4 = globalIpCounter % 256;
