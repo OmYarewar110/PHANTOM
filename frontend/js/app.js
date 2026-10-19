@@ -155,7 +155,9 @@ import { ChatSessions } from './chat-sessions.js';
       if (ws && ws.readyState === WebSocket.OPEN) {
         try {
           ws.send(JSON.stringify({ type: 'ping' }));
-        } catch (e) {}
+        } catch (e) {
+          console.error('[WebSocket] Ping failed:', e);
+        }
       }
     }, 15000);
   }

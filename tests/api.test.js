@@ -133,6 +133,83 @@ describe('API Routes', () => {
     expect(res.body.title).toBe('Test Conv');
   });
 
+  it('GET /api/conversations should return all conversations', async () => {
+    const octet3 = Math.floor(globalIpCounter / 256);
+    const octet4 = globalIpCounter % 256;
+    const uniqueTestIp = `192.168.${octet3}.${octet4}`;
+    globalIpCounter++;
+
+    // Create conversation first
+    await request(app).post('/api/conversations').set('X-Forwarded-For', uniqueTestIp).send({ title: 'Test Conv List' });
+
+    const res = await request(app).get('/api/conversations').set('X-Forwarded-For', uniqueTestIp);
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body[0]).toHaveProperty('id');
+    expect(res.body[0]).toHaveProperty('title');
+  });
+
+  it('GET /api/conversations/:id should return a specific conversation', async () => {
+    const octet3 = Math.floor(globalIpCounter / 256);
+    const octet4 = globalIpCounter % 256;
+    const uniqueTestIp = `192.168.${octet3}.${octet4}`;
+    globalIpCounter++;
+
+    // Create conversation first
+    const createRes = await request(app).post('/api/conversations').set('X-Forwarded-For', uniqueTestIp).send({ title: 'Test Conv Specific' });
+    const convId = createRes.body.id;
+
+    const res = await request(app).get(`/api/conversations/${convId}`).set('X-Forwarded-For', uniqueTestIp);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('id', convId);
+    expect(res.body).toHaveProperty('title', 'Test Conv Specific');
+    expect(Array.isArray(res.body.messages)).toBe(true);
+  });
+
+  it('PUT /api/conversations/:id/title should update conversation title', async () => {
+    const octet3 = Math.floor(globalIpCounter / 256);
+    const octet4 = globalIpCounter % 256;
+    const uniqueTestIp = `192.168.${octet3}.${octet4}`;
+    globalIpCounter++;
+
+    // Create conversation first
+    const createRes = await request(app).post('/api/conversations').set('X-Forwarded-For', uniqueTestIp).send({ title: 'Test Conv Update' });
+    const convId = createRes.body.id;
+
+    const updateRes = await request(app)
+      .put(`/api/conversations/${convId}/title`)
+      .set('X-Forwarded-For', uniqueTestIp)
+      .send({ title: 'Updated Title' });
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.success).toBe(true);
+
+    const getRes = await request(app).get(`/api/conversations/${convId}`).set('X-Forwarded-For', uniqueTestIp);
+    expect(getRes.body.title).toBe('Updated Title');
+  });
+
+  it('DELETE /api/conversations/:id should delete a conversation', async () => {
+    const octet3 = Math.floor(globalIpCounter / 256);
+    const octet4 = globalIpCounter % 256;
+    const uniqueTestIp = `192.168.${octet3}.${octet4}`;
+    globalIpCounter++;
+
+    // Create conversation first
+    const createRes = await request(app).post('/api/conversations').set('X-Forwarded-For', uniqueTestIp).send({ title: 'Test Conv Delete' });
+    const convId = createRes.body.id;
+
+    const deleteRes = await request(app)
+      .delete(`/api/conversations/${convId}`)
+      .set('X-Forwarded-For', uniqueTestIp);
+    expect(deleteRes.status).toBe(200);
+    expect(deleteRes.body.success).toBe(true);
+
+    // Verify it's deleted by checking all conversations
+    const getRes = await request(app).get('/api/conversations').set('X-Forwarded-For', uniqueTestIp);
+    const found = getRes.body.find(c => c.id === convId);
+    expect(found).toBeUndefined();
+  });
+
   it('GET /api/conversations/:id/export should export conversation to markdown', async () => {
     const octet3 = Math.floor(globalIpCounter / 256);
     const octet4 = globalIpCounter % 256;
