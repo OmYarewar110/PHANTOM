@@ -141,4 +141,16 @@ describe('validateUrlForSSRF', () => {
       expect(() => validateUrlForSSRF(`http://${domain}`)).toThrow('Access to dynamic DNS loopbacks/local domains is forbidden (SSRF protection).');
     }
   });
+
+  it('web_request should handle SSRF validation failure gracefully', async () => {
+    const result = await executeTool('web_request', { url: 'http://localhost' });
+    expect(typeof result).toBe('string');
+    expect(result).toMatch(/^Request error:/);
+  });
+
+  it('scrape_webpage should handle SSRF validation failure gracefully', async () => {
+    const result = await executeTool('scrape_webpage', { url: 'http://localhost' });
+    expect(typeof result).toBe('string');
+    expect(result).toMatch(/^Scrape error:/);
+  });
 });
