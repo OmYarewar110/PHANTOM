@@ -118,7 +118,7 @@ export function validateUrlForSSRF(urlString) {
   const hostname = parsedUrl.hostname.toLowerCase();
 
   // Exact matches
-  const forbiddenHosts = ['localhost', '127.0.0.1', '169.254.169.254', '0.0.0.0', '::1', '[::1]', '[0:0:0:0:0:0:0:1]'];
+  const forbiddenHosts = ['localhost', '127.0.0.1', '169.254.169.254', '0.0.0.0', '::1', '[::1]', '[0:0:0:0:0:0:0:1]', 'metadata.google.internal', 'metadata.google'];
   if (forbiddenHosts.includes(hostname)) {
     throw new Error('Access to internal/local hostnames is forbidden (SSRF protection).');
   }
@@ -148,7 +148,44 @@ export function validateUrlForSSRF(urlString) {
     throw new Error('Access to dynamic DNS loopbacks/local domains is forbidden (SSRF protection).');
   }
 
+  if (isBlockedIp(hostname)) {
+    throw new Error('Access to private or reserved addresses is forbidden (SSRF protection).');
+  }
+
   return parsedUrl;
+}
+
+/**
+ * True when a hostname that is already an IP literal (dotted IPv4, IPv6, or
+ * IPv4-mapped IPv6 in dotted or hex form) falls in a loopback, private,
+ * link-local, CGNAT, multicast, or otherwise reserved range.
+ */
+export function isBlockedIp(hostname) {
+  const h = String(hostname).replace(/^\[|\]$/g, '').toLowerCase();
+
+  const hexMapped = h.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+  if (hexMapped) {
+    const hi = parseInt(hexMapped[1], 16);
+    const lo = parseInt(hexMapped[2], 16);
+    return isBlockedIp(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
+  }
+
+  const dotted = h.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/) || h.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/);
+  if (dotted) {
+    const [a, b] = dotted[1].split('.').map(Number);
+    if (a === 0 || a === 10 || a === 127) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true;
+    if (a >= 224) return true;
+    return false;
+  }
+
+  if (h === '::' || h === '::1') return true;
+  if (/^f[cd][0-9a-f]{2}:/.test(h)) return true;
+  if (/^fe[89ab][0-9a-f]:/.test(h)) return true;
+  return false;
 }
 
 /**
@@ -1118,16 +1155,33 @@ exec ${cleanName} "$@"
 async function webRequest({ url, method = 'GET', headers = {}, body, follow_redirects = true }) {
   try {
     validateUrlForSSRF(url);
-    const opts = {
-      method,
-      headers: { 'User-Agent': getRandomUA(), ...headers },
-      redirect: follow_redirects ? 'follow' : 'manual',
-    };
-    if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
-      opts.body = body;
+    // Follow redirects manually so every hop is revalidated; fetch's own
+    // redirect handling would send the request to an unchecked target.
+    let currentUrl = url;
+    let currentMethod = method;
+    let currentBody = body;
+    let response;
+    for (let hop = 0; hop <= 5; hop++) {
+      const opts = {
+        method: currentMethod,
+        headers: { 'User-Agent': getRandomUA(), ...headers },
+        redirect: 'manual',
+      };
+      if (currentBody && ['POST', 'PUT', 'PATCH'].includes(currentMethod)) {
+        opts.body = currentBody;
+      }
+      response = await fetch(currentUrl, opts);
+      const location = response.headers.get('location');
+      if (!follow_redirects || ![301, 302, 303, 307, 308].includes(response.status) || !location) break;
+      if (hop === 5) throw new Error('Too many redirects');
+      const nextUrl = new URL(location, currentUrl).toString();
+      validateUrlForSSRF(nextUrl);
+      if (response.status === 303 || ((response.status === 301 || response.status === 302) && currentMethod === 'POST')) {
+        currentMethod = 'GET';
+        currentBody = undefined;
+      }
+      currentUrl = nextUrl;
     }
-
-    const response = await fetch(url, opts);
     const status = response.status;
     const respHeaders = Object.fromEntries(response.headers.entries());
     const text = await response.text();
