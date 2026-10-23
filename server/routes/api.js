@@ -648,6 +648,17 @@ router.post('/skills/upload', upload.single('file'), (req, res) => {
       }
     }
 
+    // Reject link entries. A symlink inside the zip can point outside the
+    // skill directory, and how extraction handles links is library-defined;
+    // today a link entry followed by a file under it crashes extraction and
+    // leaves a half-written skill directory behind.
+    for (const entry of entries) {
+      const mode = (entry.header?.attr ?? entry.attr ?? 0) >>> 16;
+      if ((mode & 0o170000) === 0o120000) {
+        return res.status(400).json({ error: 'Malicious zip file detected: Link entries are not allowed' });
+      }
+    }
+
     if (!existsSync(extractTo)) mkdirSync(extractTo, { recursive: true });
     zip.extractAllTo(extractTo, true);
     // Cleanup temp file
